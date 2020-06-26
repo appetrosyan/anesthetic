@@ -658,6 +658,40 @@ class NestedSamples(MCMCSamples):
     def _constructor(self):
         return NestedSamples
 
+    def posterior_mass_plot(self, axes=None, temperature=1, **kwargs):
+        """The logX, vs LX posterior mass plot as seen in
+        https://arxiv.org/abs/1703.09701 by E.J. Higson.
+
+        Parameters
+        ----------
+        axes: matplotlib.axes
+           if supplied, draws the plot to the specified axes
+
+        temperature : float
+           The temperature of the samples currently viewed, proportional to 1/beta.
+           default=1
+
+        **kwargs : dict
+           matplotlib.pyplot.plot arguments.
+        Returns
+        -------
+        out :
+
+        """
+        # This is poison, we should really not have to do this.
+        # Also in gui/plot.py
+        # `nestcheck` doesn't need this. (it also crashes)
+        with np.errstate(divide='ignore'):
+            logX = np.log(self.nlive / (self.nlive+1)).cumsum()
+        kT = temperature
+        LX = self.logL/kT + logX
+        LX = np.exp(LX - LX.max())
+        if axes is not None:
+            return axes.plot(logX, LX, **kwargs)
+        else:
+            import matplotlib.pyplot as plt
+            return plt.plot(logX, LX, **kwargs)
+
 
 def merge_nested_samples(runs):
     """Merge two or more nested sampling runs.
